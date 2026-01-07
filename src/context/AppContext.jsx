@@ -1,0 +1,44 @@
+import React, { createContext, useReducer, useContext } from 'react';
+
+const AppContext = createContext();
+
+const initialState = {
+  transactions: []
+};
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_TRANSACTION':
+      return {
+        ...state,
+        transactions: [action.payload, ...state.transactions]
+      };
+    case 'DELETE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.filter(t => t.id !== action.payload)
+      };
+    default:
+      return state;
+  }
+};
+
+export const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const addTransaction = (transaction) => {
+    dispatch({ type: 'ADD_TRANSACTION', payload: { ...transaction, id: Date.now() } });
+  };
+
+  const deleteTransaction = (id) => {
+    dispatch({ type: 'DELETE_TRANSACTION', payload: id });
+  };
+
+  return (
+    <AppContext.Provider value={{ state, addTransaction, deleteTransaction }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useAppContext = () => useContext(AppContext);
