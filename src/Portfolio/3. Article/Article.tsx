@@ -30,7 +30,7 @@ function useWindowSize() {
     return windowSize;
 }
 
-function Left({ isMobile }: { isMobile: boolean }){
+function Left({ isMobile, dailyMemos, onDateClick }: { isMobile: boolean, dailyMemos: {[key: string]: string}, onDateClick: (dateString: string) => void }){
     const [date, setDate] = useState<Value>(new Date());
     const { state } = useAppContext();
     
@@ -38,6 +38,12 @@ function Left({ isMobile }: { isMobile: boolean }){
     const getTransactionsByDate = (date: Date) => {
         const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; // YYYY-MM-DD 형식
         return state.transactions.filter((t: any) => t.date === dateString);
+    };
+    
+    // 특정 날짜에 메모가 있는지 확인
+    const hasMemo = (date: Date) => {
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return !!dailyMemos[dateString];
     };
     
     const getTotalByDate = (date: Date) => {
@@ -65,9 +71,16 @@ function Left({ isMobile }: { isMobile: boolean }){
                 <Calendar 
                     onChange={setDate} 
                     value={date}
+                    onClickDay={(value) => {
+                        const dateString = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+                        if (dailyMemos[dateString]) {
+                            onDateClick(dateString);
+                        }
+                    }}
                     tileContent={({ date, view }) => {
                         if (view === 'month') {
                             const { income, expense } = getTotalByDate(date);
+                            const memo = hasMemo(date);
                             
                             return (
                                 <div style={{
@@ -94,6 +107,14 @@ function Left({ isMobile }: { isMobile: boolean }){
                                             {expense.toLocaleString()}
                                         </div>
                                     )}
+                                    {memo && (
+                                        <div style={{
+                                            color: '#FFD43B',
+                                            fontSize: '12px'
+                                        }}>
+                                            📝
+                                        </div>
+                                    )}
                                 </div>
                             );
                         }
@@ -109,9 +130,44 @@ function Left({ isMobile }: { isMobile: boolean }){
 }
 // Left END
 
-function Right({ isMobile }: { isMobile: boolean }){
+function Right({ isMobile, dailyMemos, setDailyMemos }: { isMobile: boolean, dailyMemos: {[key: string]: string}, setDailyMemos: React.Dispatch<React.SetStateAction<{[key: string]: string}>> }){
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
-    const { state, deleteTransaction } = useAppContext();
+    const [isEditingDailyMemo, setIsEditingDailyMemo] = useState<boolean>(false);
+    const [tempDailyMemo, setTempDailyMemo] = useState<string>('');
+    const [editingMemoId, setEditingMemoId] = useState<number | null>(null);
+    const [tempMemo, setTempMemo] = useState<string>('');
+    const { state, deleteTransaction, updateTransaction } = useAppContext();
+    
+    // 현재 날짜 문자열
+    const currentDateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+    const currentMemo = dailyMemos[currentDateString] || '';
+    
+    // 메모 저장하기
+    const saveDailyMemo = () => {
+        if (tempDailyMemo.trim() === '') {
+            // 빈 메모는 삭제
+            const newMemos = { ...dailyMemos };
+            delete newMemos[currentDateString];
+            setDailyMemos(newMemos);
+            localStorage.setItem('dailyMemos', JSON.stringify(newMemos));
+        } else {
+            const newMemos = { ...dailyMemos, [currentDateString]: tempDailyMemo };
+            setDailyMemos(newMemos);
+            localStorage.setItem('dailyMemos', JSON.stringify(newMemos));
+        }
+        setIsEditingDailyMemo(false);
+        setTempDailyMemo('');
+    };
+    
+    // 메모 삭제하기
+    const deleteDailyMemo = () => {
+        const newMemos = { ...dailyMemos };
+        delete newMemos[currentDateString];
+        setDailyMemos(newMemos);
+        localStorage.setItem('dailyMemos', JSON.stringify(newMemos));
+        setIsEditingDailyMemo(false);
+        setTempDailyMemo('');
+    };
     
     // 날짜 포맷팅 함수
     const formatDate = (date: Date) => {
@@ -179,9 +235,111 @@ function Right({ isMobile }: { isMobile: boolean }){
             </div>
 
             <div style={MemoStyle}>
-                <h3><FontAwesomeIcon icon={faStickyNote} style={{color: "#FFD43B",marginRight : 10,}} />오늘의 메모 <FontAwesomeIcon icon={faStickyNote} style={{color: "#c2c2c2", float : 'right'}} /></h3>
+                <h3>
+                    <FontAwesomeIcon icon={faStickyNote} style={{color: "#FFD43B",marginRight : 10,}} />
+                    오늘의 메모
+                    <div style={{float: 'right', display: 'flex', gap: '10px', alignItems: 'center'}}>
+                        {currentMemo && (
+                            <FontAwesomeIcon 
+                                icon={faTrash} 
+                                style={{
+                                    color: '#999',
+                                    cursor: 'pointer',
+                                    transition: 'color 0.2s',
+                                    fontSize: '14px'
+                                }} 
+                                onClick={deleteDailyMemo}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#F44336'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#999'}
+                            />
+                        )}
+                        <FontAwesomeIcon 
+                            icon={faStickyNote} 
+                            style={{
+                                color: currentMemo ? "#FFD43B" : "#c2c2c2", 
+                                cursor: 'pointer',
+                                transition: 'color 0.2s'
+                            }} 
+                            onClick={() => {
+                                if (isEditingDailyMemo) {
+                                    saveDailyMemo();
+                                } else {
+                                    setIsEditingDailyMemo(true);
+                                    setTempDailyMemo(currentMemo);
+                                }
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = currentMemo ? '#FFC107' : '#999'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = currentMemo ? '#FFD43B' : '#c2c2c2'}
+                        />
+                    </div>
+                </h3>
                 <br />
-                <span style={{color:'#333'}}>메모가 없습니다. 메모를 작성해보세요!</span>
+                {isEditingDailyMemo ? (
+                    <>
+                        <textarea
+                            value={tempDailyMemo}
+                            onChange={(e) => setTempDailyMemo(e.target.value)}
+                            placeholder="오늘의 메모가 없습니다! 메모를 작성해보세요..."
+                            style={{
+                                width: '100%',
+                                minHeight: '60px',
+                                border: '1px solid #FFE066',
+                                backgroundColor: 'white',
+                                color: '#333',
+                                fontSize: '14px',
+                                fontFamily: 'inherit',
+                                resize: 'none',
+                                outline: 'none',
+                                padding: '8px',
+                                borderRadius: '5px'
+                            }}
+                            autoFocus
+                        />
+                        <div style={{marginTop: '10px', display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+                            <button
+                                onClick={saveDailyMemo}
+                                style={{
+                                    padding: '5px 15px',
+                                    backgroundColor: '#4CAF50',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                }}
+                            >
+                                저장
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsEditingDailyMemo(false);
+                                    setTempDailyMemo('');
+                                }}
+                                style={{
+                                    padding: '5px 15px',
+                                    backgroundColor: '#999',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                }}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div style={{
+                        color: '#333',
+                        fontSize: '14px',
+                        minHeight: '60px',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                    }}>
+                        메모가 없습니다. 메모를 작성해보세요!
+                    </div>
+                )}
             </div>
 
             <div style={TransactionStyle}>
@@ -200,30 +358,119 @@ function Right({ isMobile }: { isMobile: boolean }){
                         </div>
                     ) : (
                         state.transactions.map((transaction: any) => (
-                            <div key={transaction.id} style={TransactionItemStyle}>
-                                <div>
-                                    <span style={{fontWeight: 'bold', marginRight: '10px'}}>
-                                        {transaction.category}
-                                    </span>
-                                    <span style={{
-                                        color: transaction.type === 'income' ? 'blue' : 'red',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {transaction.type === 'income' ? '+' : ''}
-                                        {transaction.amount.toLocaleString()}원
-                                    </span>
+                            <div key={transaction.id}>
+                                <div style={TransactionItemStyle}>
+                                    <div>
+                                        <span style={{fontWeight: 'bold', marginRight: '10px'}}>
+                                            {transaction.category}
+                                        </span>
+                                        <span style={{
+                                            color: transaction.type === 'income' ? 'blue' : 'red',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {transaction.type === 'income' ? '+' : ''}
+                                            {transaction.amount.toLocaleString()}원
+                                        </span>
+                                    </div>
+                                    <div style={{display: 'flex', gap: '50px', alignItems: 'center'}}>
+                                        <FontAwesomeIcon 
+                                            icon={faStickyNote} 
+                                            style={{
+                                                color: transaction.memo ? '#FFD43B' : '#ccc',
+                                                cursor: 'pointer',
+                                                transition: 'color 0.2s',
+                                                fontSize: '16px'
+                                            }}
+                                            onClick={() => {
+                                                if (editingMemoId === transaction.id) {
+                                                    updateTransaction(transaction.id, { memo: tempMemo });
+                                                    setEditingMemoId(null);
+                                                    setTempMemo('');
+                                                } else {
+                                                    setEditingMemoId(transaction.id);
+                                                    setTempMemo(transaction.memo || '');
+                                                }
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.color = transaction.memo ? '#FFC107' : '#999'}
+                                            onMouseLeave={(e) => e.currentTarget.style.color = transaction.memo ? '#FFD43B' : '#ccc'}
+                                        />
+                                        <FontAwesomeIcon 
+                                            icon={faTrash} 
+                                            style={{
+                                                color: '#999',
+                                                cursor: 'pointer',
+                                                transition: 'color 0.2s'
+                                            }}
+                                            onClick={() => deleteTransaction(transaction.id)}
+                                            onMouseEnter={(e) => e.currentTarget.style.color = '#F44336'}
+                                            onMouseLeave={(e) => e.currentTarget.style.color = '#999'}
+                                        />
+                                    </div>
                                 </div>
-                                <FontAwesomeIcon 
-                                    icon={faTrash} 
-                                    style={{
-                                        color: '#999',
-                                        cursor: 'pointer',
-                                        transition: 'color 0.2s'
-                                    }}
-                                    onClick={() => deleteTransaction(transaction.id)}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#F44336'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#999'}
-                                />
+                                {editingMemoId === transaction.id && (
+                                    <div style={{
+                                        padding: '10px',
+                                        backgroundColor: '#FFFBE6',
+                                        borderRadius: '5px',
+                                        marginTop: '5px',
+                                        marginBottom: '10px'
+                                    }}>
+                                        <textarea
+                                            value={tempMemo}
+                                            onChange={(e) => setTempMemo(e.target.value)}
+                                            placeholder="메모를 입력하세요..."
+                                            style={{
+                                                width: '100%',
+                                                minHeight: '50px',
+                                                border: '1px solid #FFE066',
+                                                borderRadius: '5px',
+                                                padding: '8px',
+                                                fontSize: '13px',
+                                                fontFamily: 'inherit',
+                                                resize: 'vertical',
+                                                outline: 'none'
+                                            }}
+                                            autoFocus
+                                        />
+                                        <div style={{marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+                                            <button
+                                                onClick={() => {
+                                                    updateTransaction(transaction.id, { memo: tempMemo });
+                                                    setEditingMemoId(null);
+                                                    setTempMemo('');
+                                                }}
+                                                style={{
+                                                    padding: '5px 15px',
+                                                    backgroundColor: '#4CAF50',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '5px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '12px'
+                                                }}
+                                            >
+                                                저장
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setEditingMemoId(null);
+                                                    setTempMemo('');
+                                                }}
+                                                style={{
+                                                    padding: '5px 15px',
+                                                    backgroundColor: '#999',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '5px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '12px'
+                                                }}
+                                            >
+                                                취소
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -238,6 +485,24 @@ function Right({ isMobile }: { isMobile: boolean }){
 export default function Article() {
     const { width } = useWindowSize();
     const isMobile = width < 768; // 모바일/ 태블릿
+    const [dailyMemos, setDailyMemos] = useState<{[key: string]: string}>({});
+    const [popupMemo, setPopupMemo] = useState<{date: string, content: string} | null>(null);
+    
+    // 메모 불러오기
+    useEffect(() => {
+        const savedMemos = localStorage.getItem('dailyMemos');
+        if (savedMemos) {
+            setDailyMemos(JSON.parse(savedMemos));
+        }
+    }, []);
+    
+    // 날짜 클릭 시 팝업 표시
+    const handleDateClick = (dateString: string) => {
+        setPopupMemo({
+            date: dateString,
+            content: dailyMemos[dateString]
+        });
+    };
 
     const MainArticle: React.CSSProperties = {
         marginTop : isMobile ? '30px' : '50px',
@@ -250,8 +515,68 @@ export default function Article() {
 
     return (
         <div style={MainArticle}>
-            <Left isMobile={isMobile} />
-            <Right isMobile={isMobile} />
+            <Left isMobile={isMobile} dailyMemos={dailyMemos} onDateClick={handleDateClick} />
+            <Right isMobile={isMobile} dailyMemos={dailyMemos} setDailyMemos={setDailyMemos} />
+            
+            {popupMemo && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}
+                onClick={() => setPopupMemo(null)}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '30px',
+                        borderRadius: '15px',
+                        maxWidth: '500px',
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflowY: 'auto',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+                    }}
+                    onClick={(e) => e.stopPropagation()}>
+                        <h3 style={{marginBottom: '15px', color: '#333'}}>
+                            <FontAwesomeIcon icon={faStickyNote} style={{color: "#FFD43B", marginRight: '10px'}} />
+                            {popupMemo.date} 메모
+                        </h3>
+                        <div style={{
+                            backgroundColor: '#FFFBE6',
+                            padding: '15px',
+                            borderRadius: '10px',
+                            border: '1px solid #FFE066',
+                            minHeight: '100px',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            color: '#333'
+                        }}>
+                            {popupMemo.content}
+                        </div>
+                        <button
+                            onClick={() => setPopupMemo(null)}
+                            style={{
+                                marginTop: '20px',
+                                padding: '8px 20px',
+                                backgroundColor: '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                float: 'right'
+                            }}>
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

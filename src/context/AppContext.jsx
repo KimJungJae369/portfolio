@@ -18,6 +18,13 @@ const reducer = (state, action) => {
         ...state,
         transactions: state.transactions.filter(t => t.id !== action.payload)
       };
+    case 'UPDATE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.map(t => 
+          t.id === action.payload.id ? { ...t, ...action.payload.updates } : t
+        )
+      };
     default:
       return state;
   }
@@ -34,8 +41,12 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: 'DELETE_TRANSACTION', payload: id });
   };
 
+  const updateTransaction = (id, updates) => {
+    dispatch({ type: 'UPDATE_TRANSACTION', payload: { id, updates } });
+  };
+
   return (
-    <AppContext.Provider value={{ state, addTransaction, deleteTransaction }}>
+    <AppContext.Provider value={{ state, addTransaction, deleteTransaction, updateTransaction }}>
       {children}
     </AppContext.Provider>
   );

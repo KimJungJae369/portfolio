@@ -4,11 +4,19 @@ export default function Header() {
         fontSize : '14px',   
         marginTop : '5px'
     }
+    
+    // 현재 날짜를 가져와서 한국어 형식으로 포맷팅
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const formattedDate = `${year}년 ${month}월 ${day}일`;
+    
   return (
    
     <div>
         <h1>나의 가계부</h1>
-        <p style={subMenu}> 2025년 12월 29일 </p>
+        <p style={subMenu}> {formattedDate} </p>
     </div>
   )
 }
