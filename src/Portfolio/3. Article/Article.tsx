@@ -559,21 +559,43 @@ export default function Article() {
                         }}>
                             {popupMemo.content}
                         </div>
-                        <button
-                            onClick={() => setPopupMemo(null)}
-                            style={{
-                                marginTop: '20px',
-                                padding: '8px 20px',
-                                backgroundColor: '#4CAF50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                float: 'right'
-                            }}>
-                            닫기
-                        </button>
+                        <div style={{marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+                            <button
+                                onClick={() => {
+                                    const newMemos = { ...dailyMemos };
+                                    delete newMemos[popupMemo.date];
+                                    setDailyMemos(newMemos);
+                                    localStorage.setItem('dailyMemos', JSON.stringify(newMemos));
+                                    setPopupMemo(null);
+                                }}
+                                style={{
+                                    padding: '8px 20px',
+                                    backgroundColor: '#F44336',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#D32F2F'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F44336'}>
+                                삭제
+                            </button>
+                            <button
+                                onClick={() => setPopupMemo(null)}
+                                style={{
+                                    padding: '8px 20px',
+                                    backgroundColor: '#4CAF50',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}>
+                                닫기
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
