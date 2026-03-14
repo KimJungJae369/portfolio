@@ -1,9 +1,11 @@
-import React from 'react'
+// 연결
 import Header from './1. Header/Header'
 import Section from './2. Section/Section'
 import Article from './3. Article/Article'
 import Article2 from './4. Article2/Article2'
-import { AppProvider } from '../context/AppContext'
+
+// Context API
+import { AppProvider } from './2. Section/AppContext'
 
 
 

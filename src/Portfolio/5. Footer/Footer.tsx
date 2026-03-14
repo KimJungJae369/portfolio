@@ -15,6 +15,41 @@ const Footer = () => {
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
+        {/* 편지형 소개 카드 (추가) */}
+        <div style={{
+          background: '#fffaf0',
+          border: '1px solid #f0e0b8',
+          padding: '20px',
+          borderRadius: '8px',
+          margin: '0 auto 30px',
+          maxWidth: '900px',
+          fontFamily: "'Georgia', 'Times New Roman', serif",
+          color: '#333',
+          boxShadow: '0 6px 18px rgba(0,0,0,0.06)'
+        }}>
+          <p style={{ margin: '0 0 8px', color: '#666' }}>받는 사람: 채용 담당자 / 협업 파트너님께</p>
+          <p style={{ margin: '0 0 12px', lineHeight: '1.6' }}>
+            안녕하세요. 저는 부산에 거주하는 프론트엔드 개발자입니다.<br />
+            UI/UX 중심의 웹 애플리케이션을 만들며 사용자 경험을 개선하는 일을 즐깁니다.<br />
+            문의나 협업 요청은 아래 연락처로 편하게 연락 주세요.
+          </p>
+          <p style={{ margin: '0', fontStyle: 'italic', color: '#444' }}>
+            연락처: <strong>010-1234-5678</strong> · 이메일: <strong>ktk662002@naver.com</strong>
+          </p>
+          <div style={{ marginTop: '12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <a href="mailto:ktk662002@naver.com?subject=포트폴리오%20문의&body=안녕하세요%2C%20포트폴리오를%20보고%20연락드립니다." style={{
+              backgroundColor: '#3498db',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontWeight: 600
+            }}>메일 보내기</a>
+            <a href="tel:01012345678" style={{ color: '#3498db', textDecoration: 'none', fontWeight: 600 }}>전화걸기</a>
+          </div>
+          <p style={{ marginTop: '14px', textAlign: 'right', fontWeight: 700 }}>— ktk662002</p>
+        </div>
+
         {/* 상단 섹션: 3단 컬럼 */}
         <div style={{
           display: 'flex',

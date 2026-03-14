@@ -1,6 +1,6 @@
 import React from 'react'
 import Wrap from './Wrap'
-import Footer from './5. Footer/footer'
+import Footer from './5. Footer/Footer'
 
 
 export default function App() {

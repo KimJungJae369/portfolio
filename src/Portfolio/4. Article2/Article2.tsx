@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowTrendUp, faArrowTrendDown, faWallet, faCalendar } from '@fortawesome/free-solid-svg-icons';
-import { useAppContext } from '../../context/AppContext';
+import { useAppContext } from '../2. Section/AppContext';
 
 // 화면 크기 감지 hook
 function useWindowSize() {

@@ -4,7 +4,7 @@ import 'react-calendar/dist/Calendar.css';
 import './CalendarStyle.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStickyNote, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { useAppContext } from '../../context/AppContext';
+import { useAppContext } from '../2. Section/AppContext';
 
 type Value = Date | null | [Date | null, Date | null];
 
@@ -586,7 +586,7 @@ export default function Article() {
                                 onClick={() => setPopupMemo(null)}
                                 style={{
                                     padding: '8px 20px',
-                                    backgroundColor: '#4CAF50',
+                                    backgroundColor: '#4CAF50', 
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '5px',
