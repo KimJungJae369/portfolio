@@ -1,5 +1,7 @@
 import {useState, useEffect} from 'react'
 import {useAppContext} from './AppContext'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowTrendUp, faArrowTrendDown, faWallet } from '@fortawesome/free-solid-svg-icons'
 import './Section.css'
 
 function useWindowSize(){
@@ -49,18 +51,23 @@ export default function Article(){
         <div className="MainMenu">
             <div className="itemStyle">
                 <div className="itemIcon">
+                    <FontAwesomeIcon icon={faArrowTrendUp} style={{ color: '#006be6', marginRight: 8 }} />
                     <h2 style={{ color: 'blue' }}>수입 : {totalIncome}원</h2>
                 </div>
             </div>
 
             <div className="itemStyle">
                 <div className="itemIcon">
+                    <FontAwesomeIcon icon={faArrowTrendDown} style={{ color: '#e60000', marginRight: 8 }} />
                     <h2 style={{color : 'red'}}>지출 : {totalExpense}원</h2>
                 </div>
             </div>
 
             <div className="itemStyle">
-                <h2>잔액 : {balance}원</h2>
+                <div className="itemIcon">
+                    <FontAwesomeIcon icon={faWallet} style={{ color: '#00b12c', marginRight: 8 }} />
+                    <h2>잔액 : {balance}원</h2>
+                </div>
             </div>
         </div>
     )
